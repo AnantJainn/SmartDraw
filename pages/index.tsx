@@ -35,7 +35,7 @@ const Home: NextPage = () => {
   const handleClick = async () => {
     if (!ticketPrice) return;
 
-    const notification = toast.loading("Khareed rahe h bhai tumhari tickets, Sabr crow!!");
+    const notification = toast.loading("Buying tickets for you. Please wait!!");
 
     try {
       

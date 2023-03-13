@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .stats {
+        @apply bg-[cyan] bg-opacity-70 text-white p-4 flex-1 rounded-md border-[#0b7765] border-2
+    }
+
+    .stats-container {
+        @apply bg-[cyan] bg-opacity-25 p-5 rounded-lg border-[cyan] border
+    }
+
+    .countdown {
+        @apply p-8 text-5xl text-center text-white rounded-lg lg:min-w-[150px] bg-gradient-to-br from-cyan-300 to-blue-800 opacity-60 border border-[#0e9289]
+    }
+
+    .countdown-label {
+        @apply text-center text-white uppercase text-sm pt-4 font-semibold
+    }
+} 

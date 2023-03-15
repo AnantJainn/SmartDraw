@@ -15,7 +15,7 @@ function Header() {
     return (
 
 
-        <header className='bg-[url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2O7IHzoIgKgSLTA_uSbL3hVl2TLgVtKyc7Q&usqp=CAU")] flex items-center space-x-2 grid grid-cols-2 md:grid-cols-5 justify-between items-center p-5'>
+        <header className='bg-[url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2O7IHzoIgKgSLTA_uSbL3hVl2TLgVtKyc7Q&usqp=CAU")] flex items-center space-x-2 grid grid-cols-2 md:grid-cols-5 justify-between items-center '>
             <div className='m-4 flex items-center space-x-2'>
                 <img className=' rounded-tl-3xl rounded-br-3xl h-20 w-20' src='https://lh3.googleusercontent.com/ogw/AAEL6siobBMEm2gO9XpYsQmlZ41a8s5XojxJosLrNVI6-mE=s64-c-mo' alt='' />
                 <div>

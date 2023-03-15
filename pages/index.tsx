@@ -5,7 +5,7 @@ import Image from "next/image";
 import Login from "../components/Login";
 import Header from "../components/Header";
 import Loading from "../components/Loading";
-import { useMetamask, useAddress, useContract, useContractMetadata, useContractRead } from "@thirdweb-dev/react";
+import { useMetamask, useAddress, useContract, useContractRead, useContractWrite, useSDK } from "@thirdweb-dev/react";
 import { ethers } from "ethers";
 import { currency } from "../constants";
 import CountdownTimer from "../components/CountdownTimer";
@@ -15,22 +15,63 @@ import toast from "react-hot-toast"
 const Home: NextPage = () => {
   const connect = useMetamask();
   const address = useAddress();
-  
+  const [userTickets, setUserTickets] = useState(0)
+
   const [quantity, setQuantity] = useState<number>(1);
   console.log(address);
   useEffect(() => {
     connect();
   }, []);
 
-  
+
   const { contract, isLoading } = useContract(process.env.NEXT_PUBLIC_LOTTERY_CONTRACT_ADDRESS);
   const { data: remainingTickets } = useContractRead(contract, "RemainingTickets");
   const { data: currentWinningReward } = useContractRead(contract, "CurrentWinningReward");
   const { data: ticketPrice } = useContractRead(contract, "ticketPrice");
   const { data: ticketCommission } = useContractRead(contract, "ticketCommission");
   const { data: expiration } = useContractRead(contract, "expiration");
+  const { data: tickets } = useContractRead(contract, "getTickets")
 
   console.log(address);
+
+  useEffect(() => {
+    if (!tickets) return;
+
+    const totalTickets: string[] = tickets;
+
+    const noOfUserTickets = totalTickets.reduce(
+      (total, ticketAddress) => (ticketAddress === address ? total + 1 : total), 0
+    );
+
+    setUserTickets(noOfUserTickets);
+  }, [tickets, address])
+
+
+  const { mutateAsync: BuyTickets } = useContractWrite(contract, "BuyTickets");
+
+  const { data: Winnings } = useContractRead(contract, "getWinningsForAddress", address)
+
+  const { mutateAsync: WithdrawWinnings } = useContractWrite(contract, "WithWinnings")
+
+  const onWithdrawWinnings =async () => {
+    const notification = toast.loading("Withdrawing winnings ...")
+
+    try {
+      const data = await WithdrawWinnings([{}]);
+
+      toast.success("Winnings withdrawn successfully!", {
+        id: notification,
+      });
+      
+    } catch (err) {
+      toast.error("Whoops something went wrong!", {
+        id: notification,
+      })
+
+      console.error("contract call failure", err);
+      
+    }
+  }
 
   const handleClick = async () => {
     if (!ticketPrice) return;
@@ -38,14 +79,27 @@ const Home: NextPage = () => {
     const notification = toast.loading("Buying tickets for you. Please wait!!");
 
     try {
-      
+      const data = await BuyTickets([
+        {
+          value: ethers.utils.parseEther(
+            (
+              Number(ethers.utils.formatEther(ticketPrice)) * quantity
+            ).toString()
+          ),
+        },
+      ]);
+
+      toast.success("Tickets purchased successfully! 🥳🥳", {
+        id: notification,
+      })
+
     } catch (err) {
       toast.error("Bhai kuch gadbad ho gyii !!", {
         id: notification,
       });
 
       console.error("Contrat call failure", err);
-      
+
     }
   }
 
@@ -67,6 +121,16 @@ const Home: NextPage = () => {
           <title>Lottery Dapp</title>
           <link rel="icon" href="/favicon.ico" />
         </Head>
+          {Winnings > 0 && (
+            <div className="max-w-md md:max-w-2xl lg:max-w-4xl mx-auto mt-5">
+              <button onClick={onWithdrawWinnings} className="p-5 bg-gradient-to-b from-blue-500 to-emerald-400 animate-pulse text-center rounded-xl w-full">
+                <p className="font-bold">Hurrayy, You won!!!</p>
+                <p>Total Winnings: {ethers.utils.formatEther(Winnings.toString())}{" "} {currency}</p>
+                <br />
+                <p className="font-semibold">Click here to withdraw</p>
+              </button>
+            </div>
+          )}
         <div className="space-y-5 md:space-y-0 m-5 md:flex md:flex-row items-start justify-center md:space-x-5">
           <div className="stats-container">
             <h1 className="text-5xl text-white font-semibold text-center">The Next Draw</h1>
@@ -115,14 +179,33 @@ const Home: NextPage = () => {
                 </div>
               </div>
               <button disabled={expiration?.toString() < Date.now().toString() || remainingTickets?.toNumber() === 0} onClick={handleClick} className="mt-5 w-full bg-gradient-to-br from-orange-500 to-cyan-500 px-10 py-5 rounded-md text-white shadow-xl disabled:from-slate-500 disabled:text-gray-100 disabled:to-gray-100 disabled:cursor-not-allowed">
-                Buy Tickets
+                Buy {quantity} tickets for{""}
+                {ticketPrice &&
+                  Number(ethers.utils.formatEther(ticketPrice.toString())) * quantity}{" "} {currency}
               </button>
 
             </div>
+            {userTickets > 0 && (
+              <div className="stats">
+                <p>you have {userTickets} Tickets in this draw</p>
+
+                <div className="flex max-w-sm flex-wrap gap-x-2 gap-y-2">{Array(userTickets).fill("").map((_, index) => (
+                  <p key={index} className="text-black font-semibold h-20 w-12 bg-slate-300/30 rounded-lg flex flex-shrink-0 items-center justify-center text-xs italic">{index + 1}</p>
+
+                ))}
+                </div>
+              </div>
+
+            )}
           </div>
 
         </div>
       </div>
+      <footer className="m-5 border-t border-emerald-400 flex items-center text-white justify-center p-5">
+        <img className="h-10 w-10 filter hue-rotate-90 opacity-20 rounded-full" src="https://i.imgur.com/4h7mAu7.png" alt="" />
+
+        <p className="text-xs text-emerald-900 pl-5" >DISCLAIMER: THIS IS FOR ENTERTAIMENT PURPOSE ONLY</p>
+      </footer>
     </div>
   </>
   )

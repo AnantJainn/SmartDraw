@@ -66,7 +66,7 @@ function CountdownTimer() {
     }
     return (
         <div>
-            <Countdown date={new Date(expiration * 100)} renderer={renderer} />
+            <Countdown date={new Date(expiration * 1000)} renderer={renderer} />
         </div>
     )
 }
